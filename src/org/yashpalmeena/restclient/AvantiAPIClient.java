@@ -1,6 +1,7 @@
 package org.yashpalmeena.restclient;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -14,12 +15,10 @@ import okhttp3.Response;
 
 /**
  * @author Yashpal Meena <yaxhpal@gmail.com>
- *
  */
 public class AvantiAPIClient {
 
 	private final OkHttpClient client = new OkHttpClient();
-
 
 	public AvantiAPIClient() {}
 
@@ -53,22 +52,59 @@ public class AvantiAPIClient {
 	}
 
 	public void getCentres() throws Exception {
-		JSONArray centres = getResource(Config.get("lms_centres_url"));
-		System.out.println(centres.toString());
+		JSONArray centres = getResources(Config.get("lms_centres_url"));
+		Iterator<Object> iterator = centres.iterator(); 
+		while (iterator.hasNext()) {
+			JSONObject obj = (JSONObject)iterator.next();
+			System.out.println(obj.toString());
+		} 
+//		System.out.println(centres.toString());
 	}
 
-	private JSONArray getResource(String resourceUrl) throws Exception {
+	/**
+	 * Get the array of resources from given end-point
+	 * @param resourceUrl Resource URL
+	 * @return JSONArray array of resources
+	 * @throws Exception if any
+	 */
+	private JSONArray getResources(String resourceUrl) throws Exception {
 		String access_token = Config.get(Config.TOKEN_NAME);
+
 		if (access_token == null || access_token.isEmpty()) {
 			access_token = getAccessToken(Config.get("user.username"), Config.get("user.password"));
 		}
+
 		Request request = new Request.Builder()
 				.url(resourceUrl)
 				.header(Config.get("auth_header_name"), Config.get("auth_header_value", access_token))
 				.build();
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-		
+
 		return new JSONArray(response.body().string());		
+	}
+
+	/**
+	 * Get the resource from given end-point
+	 * @param resourceUrl Resource URL
+	 * @return JSONArray array of resources
+	 * @throws Exception if any
+	 */
+	@SuppressWarnings("unused")
+	private JSONObject getResource(String resourceUrl) throws Exception {
+		String access_token = Config.get(Config.TOKEN_NAME);
+
+		if (access_token == null || access_token.isEmpty()) {
+			access_token = getAccessToken(Config.get("user.username"), Config.get("user.password"));
+		}
+
+		Request request = new Request.Builder()
+				.url(resourceUrl)
+				.header(Config.get("auth_header_name"), Config.get("auth_header_value", access_token))
+				.build();
+		Response response = client.newCall(request).execute();
+		if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+		return new JSONObject(response.body().string());		
 	}
 }
